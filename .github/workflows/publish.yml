@@ -79,7 +79,28 @@ jobs:
       - name: What will be published
         run: npm pack --dry-run
 
+      # The first version is published by hand (npm lets a trusted publisher be configured only on a
+      # package that already exists), so a tag for a version already on npm skips the publish.
+      # Anonymous registry read: 200 = this version exists, 404 = it does not, anything else stops.
+      - name: Check the registry
+        id: registry
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          status=$(curl -sS -o /dev/null -w '%{http_code}' "https://registry.npmjs.org/${name/\//%2f}/$version")
+          case "$status" in
+            200)
+              echo "published=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::$name@$version is already on npm; the publish step is skipped" ;;
+            404)
+              echo "published=false" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "::error::the npm registry answered HTTP $status for $name@$version"
+              exit 1 ;;
+          esac
+
       - name: Publish
+        if: steps.registry.outputs.published == 'false'
         env:
           DIST_TAG: ${{ steps.dist.outputs.tag }}
         run: npm publish --provenance --access public --tag "$DIST_TAG"
