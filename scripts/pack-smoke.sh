@@ -13,7 +13,7 @@ usage() {
   cat <<'EOF'
 Usage: bash scripts/pack-smoke.sh [--keep]
 
-Pack @chrissgon/agent-ready and exercise the tarball from a scratch project.
+Pack @chrissgon/agent-ready-kit and exercise the tarball from a scratch project.
 
 Options:
   --keep      Keep the scratch folder and print its path (default: removed on exit).
@@ -77,12 +77,12 @@ node_modules/.bin/agent-ready check --data ../site.json >/dev/null || fail "inst
 
 cat >run.mjs <<'EOF'
 import { readFileSync } from "node:fs";
-import * as all from "@chrissgon/agent-ready";
-import { validate } from "@chrissgon/agent-ready/data";
-import { generateLlms, generateLlmsParts } from "@chrissgon/agent-ready/llms";
-import { generateJsonLd, serializeJsonLd } from "@chrissgon/agent-ready/jsonld";
-import { createMcpHandler, TOOL_NAMES } from "@chrissgon/agent-ready/mcp";
-import pkg from "@chrissgon/agent-ready/package.json" with { type: "json" };
+import * as all from "@chrissgon/agent-ready-kit";
+import { validate } from "@chrissgon/agent-ready-kit/data";
+import { generateLlms, generateLlmsParts } from "@chrissgon/agent-ready-kit/llms";
+import { generateJsonLd, serializeJsonLd } from "@chrissgon/agent-ready-kit/jsonld";
+import { createMcpHandler, TOOL_NAMES } from "@chrissgon/agent-ready-kit/mcp";
+import pkg from "@chrissgon/agent-ready-kit/package.json" with { type: "json" };
 
 const data = validate(JSON.parse(readFileSync("../site.json", "utf8")));
 const check = (ok, what) => { if (!ok) { console.error(`run.mjs: ${what}`); process.exit(1); } };
@@ -106,11 +106,11 @@ step "importing every entry point"
 node run.mjs
 
 cat >types.ts <<'EOF'
-import { DataError, type SiteData } from "@chrissgon/agent-ready";
-import { validate } from "@chrissgon/agent-ready/data";
-import { generateLlms, generateLlmsParts, type LlmsLabels } from "@chrissgon/agent-ready/llms";
-import { generateJsonLd, type JsonLdDocument } from "@chrissgon/agent-ready/jsonld";
-import { buildServer, createMcpHandler, type McpHandler } from "@chrissgon/agent-ready/mcp";
+import { DataError, type SiteData } from "@chrissgon/agent-ready-kit";
+import { validate } from "@chrissgon/agent-ready-kit/data";
+import { generateLlms, generateLlmsParts, type LlmsLabels } from "@chrissgon/agent-ready-kit/llms";
+import { generateJsonLd, type JsonLdDocument } from "@chrissgon/agent-ready-kit/jsonld";
+import { buildServer, createMcpHandler, type McpHandler } from "@chrissgon/agent-ready-kit/mcp";
 
 declare const raw: unknown;
 const data: SiteData = validate(raw);

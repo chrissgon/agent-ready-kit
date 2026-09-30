@@ -29,7 +29,7 @@ function importGraph(entry: string): { files: string[]; packages: string[] } {
 describe("package.json", () => {
   it("is publishable as a public, scoped ES module with provenance", () => {
     expect(pkg.private).toBeUndefined();
-    expect(pkg.name).toBe("@chrissgon/agent-ready");
+    expect(pkg.name).toBe("@chrissgon/agent-ready-kit");
     expect(pkg.type).toBe("module");
     expect(pkg.license).toBe("MIT");
     expect(pkg.publishConfig).toEqual({ access: "public", provenance: true });

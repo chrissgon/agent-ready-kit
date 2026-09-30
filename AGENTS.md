@@ -1,6 +1,6 @@
 # agent-ready-kit
 
-A TypeScript package and CLI (`agent-ready`) that turns one JSON data file into `llms.txt`, schema.org JSON-LD and a read-only MCP server (stdio and a Web `Request` handler). Extracted from the architecture of chrissgon.dev, where one data module feeds every agent-facing output so they never diverge.
+A TypeScript package (`@chrissgon/agent-ready-kit` on npm) and CLI (`agent-ready`, the package's only bin) that turns one JSON data file into `llms.txt`, schema.org JSON-LD and a read-only MCP server (stdio and a Web `Request` handler). Extracted from the architecture of chrissgon.dev, where one data module feeds every agent-facing output so they never diverge.
 
 ## Architecture
 
@@ -35,5 +35,6 @@ A TypeScript package and CLI (`agent-ready`) that turns one JSON data file into 
 
 - Public repository `chrissgon/agent-ready-kit`. `main` is protected: every change goes through a branch and a pull request, merged by squash only when the required checks `secrets` and `build` are green, with signed commits. No force push, no rule changes, no bypass.
 - Publishing happens only in `.github/workflows/publish.yml` (npm trusted publishing, provenance, no token), started by a `v<version>` tag that the owner pushes after approving the exact payload (package name, version, `npm pack --dry-run` list, tarball integrity). An agent never runs `npm publish`, never pushes a tag and never creates a GitHub release.
+- The npm package name is `@chrissgon/agent-ready-kit`. `@chrissgon/agent-ready` (0.1.0) is an earlier name, not this package: never import it, document it or publish to it; what happens to it on npm is the owner's decision.
 - Enable the pre-commit hook once per clone: `git config core.hooksPath .githooks`. It runs the secret scan, types, tests and the build, the same checks as CI. Never skip it.
 - Credentials never enter the repository; `.env` and `.env.*` are git-ignored. Report vulnerabilities as described in `SECURITY.md`.
