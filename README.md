@@ -1,4 +1,4 @@
-# agent-ready
+# agent-ready-kit
 
 Make a small site readable by AI agents from one JSON data file. `agent-ready` validates the file against a strict schema and turns it into:
 
@@ -10,17 +10,17 @@ All three read the same validated object, so a name or a URL can never differ be
 
 ## Install
 
-Requires Node.js 22 or later. The package is an ES module with TypeScript types.
+Requires Node.js 22 or later. The package is an ES module with TypeScript types. The package is `@chrissgon/agent-ready-kit`; its command is `agent-ready`.
 
 ```sh
-npm install @chrissgon/agent-ready
+npm install @chrissgon/agent-ready-kit
 ```
 
-Or run the CLI without installing it:
+Or run the CLI without installing it (the package has one command, so `npx` runs `agent-ready`):
 
 ```sh
-npx @chrissgon/agent-ready check --data site.json
-npx @chrissgon/agent-ready build --data site.json --out public
+npx @chrissgon/agent-ready-kit check --data site.json
+npx @chrissgon/agent-ready-kit build --data site.json --out public
 ```
 
 ## The data file
@@ -79,7 +79,7 @@ One JSON file with four keys. Every object is strict: a field the schema does no
 Every error names the field, one per line, and `check` exits with 1:
 
 ```text
-$ npx @chrissgon/agent-ready check --data fixtures/forbidden-email.json
+$ npx @chrissgon/agent-ready-kit check --data fixtures/forbidden-email.json
 data: owner.email: forbidden field "email", the kit never publishes it
 ```
 
@@ -108,13 +108,13 @@ Data goes to stdout and diagnostics to stderr. Exit codes: 0 ok, 1 invalid data,
 A local MCP client starts the server as a command:
 
 ```json
-{ "command": "npx", "args": ["-y", "@chrissgon/agent-ready", "mcp", "--data", "/path/to/site.json"] }
+{ "command": "npx", "args": ["-y", "@chrissgon/agent-ready-kit", "mcp", "--data", "/path/to/site.json"] }
 ```
 
 ## Use it from code
 
 ```ts
-import { createMcpHandler, generateJsonLd, generateLlms, loadData, serializeJsonLd } from "@chrissgon/agent-ready";
+import { createMcpHandler, generateJsonLd, generateLlms, loadData, serializeJsonLd } from "@chrissgon/agent-ready-kit";
 
 const data = await loadData("site.json"); // throws DataError with one line per problem
 const llms = generateLlms(data); // default language; generateLlms(data, { lang: "pt" }) for another
@@ -126,11 +126,11 @@ const handler = createMcpHandler(data); // (request: Request) => Promise<Respons
 
 | Import from | Exports | Loads the MCP SDK |
 |-------------|---------|-------------------|
-| `@chrissgon/agent-ready` | everything below, plus `serveStdio` and `VERSION` | yes |
-| `@chrissgon/agent-ready/data` | `validate(value)`, `parseData(jsonText)`, `loadData(file)`, `DataError` (its `issues` holds one line per problem), `SiteDataSchema` (zod), `FORBIDDEN_FIELDS`; types `SiteData`, `Owner`, `Product`, `Post` | no |
-| `@chrissgon/agent-ready/llms` | `generateLlms(data, { lang, labels })`, `generateLlmsParts(data, { lang, labels })`, `LLMS_PARTS`, `DEFAULT_LLMS_LABELS`, `llmsPath(data, lang)`; types `LlmsOptions`, `LlmsLabels`, `LlmsPart` | no |
-| `@chrissgon/agent-ready/jsonld` | `generateJsonLd(data, { lang, licenseUrl })`, `serializeJsonLd(doc)`, `ownerIdOf(data)`, `spdxLicenseUrl(id)`; types `JsonLdDocument`, `JsonLdNode`, `JsonLdOptions` | no |
-| `@chrissgon/agent-ready/mcp` | `createMcpHandler(data, options)`, `buildServer(data, { name, version })`, `TOOL_NAMES`, `instructionsFor(name)`, `DEFAULT_MAX_BODY_BYTES`; types `McpHandler`, `McpHandlerOptions`, `McpServerOptions` | yes |
+| `@chrissgon/agent-ready-kit` | everything below, plus `serveStdio` and `VERSION` | yes |
+| `@chrissgon/agent-ready-kit/data` | `validate(value)`, `parseData(jsonText)`, `loadData(file)`, `DataError` (its `issues` holds one line per problem), `SiteDataSchema` (zod), `FORBIDDEN_FIELDS`; types `SiteData`, `Owner`, `Product`, `Post` | no |
+| `@chrissgon/agent-ready-kit/llms` | `generateLlms(data, { lang, labels })`, `generateLlmsParts(data, { lang, labels })`, `LLMS_PARTS`, `DEFAULT_LLMS_LABELS`, `llmsPath(data, lang)`; types `LlmsOptions`, `LlmsLabels`, `LlmsPart` | no |
+| `@chrissgon/agent-ready-kit/jsonld` | `generateJsonLd(data, { lang, licenseUrl })`, `serializeJsonLd(doc)`, `ownerIdOf(data)`, `spdxLicenseUrl(id)`; types `JsonLdDocument`, `JsonLdNode`, `JsonLdOptions` | no |
+| `@chrissgon/agent-ready-kit/mcp` | `createMcpHandler(data, options)`, `buildServer(data, { name, version })`, `TOOL_NAMES`, `instructionsFor(name)`, `DEFAULT_MAX_BODY_BYTES`; types `McpHandler`, `McpHandlerOptions`, `McpServerOptions` | yes |
 
 Pages that only need `llms.txt` or the JSON-LD import from `/data`, `/llms` and `/jsonld`, so they never load the MCP SDK.
 
@@ -141,7 +141,7 @@ Pages that only need `llms.txt` or the JSON-LD import from `/data`, `/llms` and 
 `labels` sets the headings and the fixed words inside the lines for a language; a missing label keeps its English default (`DEFAULT_LLMS_LABELS`). `about` has no default: set it to put the about paragraphs under their own H2.
 
 ```ts
-import { generateLlms } from "@chrissgon/agent-ready/llms";
+import { generateLlms } from "@chrissgon/agent-ready-kit/llms";
 
 generateLlms(data, {
   lang: "pt",
@@ -166,8 +166,8 @@ The owner's `@id` is `<site.url>/#person` (or `#organization`); every product's 
 Check it with the MCP Inspector (the server command goes before `--`, the Inspector options after it):
 
 ```sh
-npx -y @modelcontextprotocol/inspector@2.8.0 --cli npx -y @chrissgon/agent-ready mcp --data site.json -- --method tools/list
-npx -y @modelcontextprotocol/inspector@2.8.0 --cli npx -y @chrissgon/agent-ready mcp --data site.json -- --method tools/call --tool-name list_posts --tool-arg limit=2
+npx -y @modelcontextprotocol/inspector@2.8.0 --cli npx -y @chrissgon/agent-ready-kit mcp --data site.json -- --method tools/list
+npx -y @modelcontextprotocol/inspector@2.8.0 --cli npx -y @chrissgon/agent-ready-kit mcp --data site.json -- --method tools/call --tool-name list_posts --tool-arg limit=2
 ```
 
 ### In a Netlify Function (v2)
@@ -177,8 +177,8 @@ The handler is stateless: each POST gets a new server and transport, responses a
 ```ts
 // netlify/functions/mcp.mts
 import type { Config } from "@netlify/functions";
-import { validate } from "@chrissgon/agent-ready/data";
-import { createMcpHandler } from "@chrissgon/agent-ready/mcp";
+import { validate } from "@chrissgon/agent-ready-kit/data";
+import { createMcpHandler } from "@chrissgon/agent-ready-kit/mcp";
 import site from "../../site.json" with { type: "json" };
 
 export default createMcpHandler(validate(site), { name: "example.com", version: "1.0.0" });
@@ -193,7 +193,7 @@ export const config: Config = { path: "/api/mcp" };
 Run `build` before the site generator and publish its output at the site root, so `llms.txt` is served at `/llms.txt` and each other language at `/<lang>/llms.txt`:
 
 ```sh
-npx @chrissgon/agent-ready build --data site.json --out public
+npx @chrissgon/agent-ready-kit build --data site.json --out public
 ```
 
 Put the JSON-LD in the page head, from `public/jsonld.json` or from code with `serializeJsonLd(generateJsonLd(data))`:

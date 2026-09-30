@@ -1,5 +1,5 @@
 {
-  "name": "@chrissgon/agent-ready",
+  "name": "@chrissgon/agent-ready-kit",
   "version": "0.1.0",
   "description": "Make a small site readable by AI agents from one data file: llms.txt, schema.org JSON-LD and a read-only MCP server.",
   "keywords": [

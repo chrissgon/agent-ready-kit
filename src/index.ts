@@ -1,4 +1,4 @@
-// Public API of @chrissgon/agent-ready. The subpaths `/data`, `/llms`, `/jsonld` and `/mcp` export parts
+// Public API of @chrissgon/agent-ready-kit. The subpaths `/data`, `/llms`, `/jsonld` and `/mcp` export parts
 // of it; all but `/mcp` load without the MCP SDK.
 export { FORBIDDEN_FIELDS, SiteDataSchema, type Owner, type Post, type Product, type SiteData } from "./schema.js";
 export { DataError, loadData, parseData, validate } from "./load.js";
