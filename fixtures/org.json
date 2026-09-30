@@ -1,0 +1,26 @@
+{
+  "site": {
+    "url": "https://labs.example.org",
+    "langs": ["en"]
+  },
+  "owner": {
+    "type": "Organization",
+    "name": "Example Labs",
+    "alternateName": "exlabs",
+    "label": { "en": "A small studio that maintains open-source developer tools" },
+    "profiles": [
+      { "network": "Code", "url": "https://git.example.org/exlabs" }
+    ]
+  },
+  "products": [
+    {
+      "name": "Plain Forms",
+      "url": "https://forms.labs.example.org",
+      "codeRepository": "https://git.example.org/exlabs/plain-forms",
+      "license": "MIT",
+      "programmingLanguage": ["HTML", "JavaScript"],
+      "summary": { "en": "Form validation with no build step." }
+    }
+  ],
+  "posts": []
+}

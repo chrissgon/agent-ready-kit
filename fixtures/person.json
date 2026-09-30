@@ -1,0 +1,78 @@
+{
+  "site": {
+    "url": "https://sam.example.com",
+    "langs": ["en", "pt"],
+    "mcp": "https://sam.example.com/api/mcp"
+  },
+  "owner": {
+    "type": "Person",
+    "name": "Sam Example",
+    "alternateName": "samexample",
+    "jobTitle": "Software Engineer",
+    "label": {
+      "en": "Software engineer · Small open-source tools for the web",
+      "pt": "Engenheiro de software · Ferramentas pequenas de código aberto para a web"
+    },
+    "about": {
+      "en": [
+        "Sam builds small, well-tested tools for the web and writes about how they are made.",
+        "Everything in this file is fake example data for the agent-ready kit."
+      ],
+      "pt": [
+        "Sam cria ferramentas pequenas e bem testadas para a web e escreve sobre como elas são feitas.",
+        "Tudo neste arquivo é um dado fictício de exemplo do kit agent-ready."
+      ]
+    },
+    "profiles": [
+      { "network": "Code", "handle": "samexample", "url": "https://git.example.org/samexample" },
+      { "network": "Social", "handle": "@sam", "url": "https://social.example.net/@sam" }
+    ]
+  },
+  "products": [
+    {
+      "name": "Tidy Tables",
+      "url": "https://tidytables.example.com",
+      "codeRepository": "https://git.example.org/samexample/tidy-tables",
+      "npm": "@samexample/tidy-tables",
+      "license": "MIT",
+      "programmingLanguage": ["CSS", "TypeScript"],
+      "summary": {
+        "en": "Accessible data tables in one small stylesheet.",
+        "pt": "Tabelas de dados acessíveis numa folha de estilos pequena."
+      }
+    },
+    {
+      "name": "Quiet Logs",
+      "codeRepository": "https://git.example.org/samexample/quiet-logs",
+      "license": "Apache-2.0",
+      "programmingLanguage": ["Go"],
+      "summary": {
+        "en": "A logger that only speaks when something is wrong.",
+        "pt": "Um logger que só fala quando algo está errado."
+      }
+    }
+  ],
+  "posts": [
+    {
+      "id": "tables-for-everyone",
+      "title": { "en": "Tables for everyone", "pt": "Tabelas para todos" },
+      "date": "2026-08-14",
+      "lang": ["en", "pt"],
+      "url": "https://blog.example.com/tables-for-everyone"
+    },
+    {
+      "id": "hello-agents",
+      "title": { "en": "Hello, agents" },
+      "date": "2026-09-20",
+      "lang": ["en"],
+      "url": "https://blog.example.com/hello-agents"
+    },
+    {
+      "id": "logs-que-sussurram",
+      "title": { "pt": "Logs que sussurram" },
+      "date": "2026-05-02",
+      "lang": ["pt"],
+      "url": "https://blog.example.com/logs-que-sussurram"
+    }
+  ]
+}

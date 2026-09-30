@@ -1,0 +1,6 @@
+{
+  "site": { "url": "https://min.example.com", "langs": ["en"] },
+  "owner": { "type": "Person", "name": "Min Example", "label": { "en": "Fake example owner" }, "profiles": [], "email": "min@example.com" },
+  "products": [],
+  "posts": []
+}

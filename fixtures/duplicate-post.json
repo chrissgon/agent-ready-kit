@@ -1,0 +1,9 @@
+{
+  "site": { "url": "https://min.example.com", "langs": ["en"] },
+  "owner": { "type": "Person", "name": "Min Example", "label": { "en": "Fake example owner" }, "profiles": [] },
+  "products": [],
+  "posts": [
+    { "id": "same-id", "title": { "en": "First" }, "date": "2026-09-01", "lang": ["en"], "url": "https://min.example.com/first" },
+    { "id": "same-id", "title": { "en": "Second" }, "date": "2026-09-02", "lang": ["en"], "url": "https://min.example.com/second" }
+  ]
+}
