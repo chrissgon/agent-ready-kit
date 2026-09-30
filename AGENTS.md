@@ -18,7 +18,7 @@ A TypeScript package and CLI (`agent-ready`) that turns one JSON data file into 
 | Type-check | `npm run typecheck` |
 | Test | `npm test` |
 | Build | `npm run build` (writes `dist/`) |
-| Inspect the MCP server | `npx -y @modelcontextprotocol/inspector@2.8.0 --cli node dist/cli.js mcp --data fixtures/person.json --method tools/list` |
+| Inspect the MCP server | `npx -y @modelcontextprotocol/inspector@2.8.0 --cli node dist/cli.js mcp --data fixtures/person.json -- --method tools/list` (the server command goes before `--`, the Inspector options after) |
 
 ## Conventions
 
