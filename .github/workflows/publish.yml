@@ -1,0 +1,85 @@
+# Publish @chrissgon/agent-ready to npm when the owner pushes a version tag (v<package.json version>).
+# Trusted publishing: npmjs.com trusts this repository and this workflow file (package settings, Trusted
+# Publisher: GitHub Actions, owner chrissgon, repository agent-ready-kit, workflow publish.yml), and npm
+# exchanges the job's OIDC identity for a one-off credential. No npm token is stored anywhere; provenance
+# is attached. Before publishing, the job checks that the tag matches package.json and points to a commit
+# on main, then runs the same checks as checks.yml and the packed-tarball smoke test.
+# Actions are pinned to a commit (a tag can be moved); Dependabot proposes updates.
+name: publish
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write # the identity npm's trusted publishing checks instead of a stored token
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the history secret scan, and the check that the tag is on main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      # Trusted publishing needs npm 11.5.1 or later; pinned so the publishing client does not drift.
+      - name: npm with trusted publishing
+        run: npm install -g npm@12.1.0
+
+      - name: The tag matches package.json and is on main
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "v$version" ]; then
+            echo "::error::tag $TAG does not match package.json version $version (expected v$version)"
+            exit 1
+          fi
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::tag $TAG points to $GITHUB_SHA, which is not on main"
+            exit 1
+          fi
+
+      - name: Secrets in the working tree
+        run: python3 scripts/secret-scan/secret_scan.py
+      - name: Secrets in history
+        run: python3 scripts/secret-scan/secret_scan.py --history
+      - name: Install
+        run: npm ci
+      - name: Types
+        run: npm run typecheck
+      - name: Tests (offline)
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Packed tarball works from a scratch project
+        run: npm run test:pack
+
+      # A prerelease (0.2.0-beta.1) must not take the latest tag, or `npm i` and `npx` would resolve to it.
+      - name: Pick the dist-tag from the version
+        id: dist
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [[ "$version" == *-* ]]; then echo "tag=next" >> "$GITHUB_OUTPUT"; else echo "tag=latest" >> "$GITHUB_OUTPUT"; fi
+
+      - name: What will be published
+        run: npm pack --dry-run
+
+      - name: Publish
+        env:
+          DIST_TAG: ${{ steps.dist.outputs.tag }}
+        run: npm publish --provenance --access public --tag "$DIST_TAG"
