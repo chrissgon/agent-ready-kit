@@ -1,0 +1,26 @@
+# Sam Example
+
+> Software engineer · Small open-source tools for the web
+
+Sam builds small, well-tested tools for the web and writes about how they are made.
+
+Everything in this file is fake example data for the agent-ready kit.
+
+- [Code](https://git.example.org/samexample): samexample
+- [Social](https://social.example.net/@sam): @sam
+
+## Products
+
+- [Tidy Tables](https://tidytables.example.com): Accessible data tables in one small stylesheet. Code: https://git.example.org/samexample/tidy-tables. npm: @samexample/tidy-tables. License: MIT. Programming languages: CSS, TypeScript.
+- [Quiet Logs](https://git.example.org/samexample/quiet-logs): A logger that only speaks when something is wrong. License: Apache-2.0. Programming languages: Go.
+
+## Writing
+
+- [Hello, agents](https://blog.example.com/hello-agents): 2026-09-20; languages: en
+- [Tables for everyone](https://blog.example.com/tables-for-everyone): 2026-08-14; languages: en, pt
+- [Logs que sussurram](https://blog.example.com/logs-que-sussurram): 2026-05-02; languages: pt
+
+## For agents
+
+- [MCP server](https://sam.example.com/api/mcp): read-only, Streamable HTTP (POST); tools get_profile, list_products, list_posts
+- [llms.txt (pt)](https://sam.example.com/pt/llms.txt): this file in pt
