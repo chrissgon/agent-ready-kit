@@ -7,11 +7,12 @@ import type { SiteData } from "./schema.js";
 import { defaultLang, postsNewestFirst, postTitle } from "./select.js";
 import { VERSION } from "./version.js";
 
-export const TOOL_NAMES = ["get_profile", "list_products", "list_posts"] as const;
+export { TOOL_NAMES } from "./tools.js";
 
 const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
 
 const ProfileOutput = z.object({
+  lang: z.string(),
   type: z.enum(["Person", "Organization"]),
   name: z.string(),
   alternateName: z.string().optional(),
@@ -23,8 +24,10 @@ const ProfileOutput = z.object({
 });
 
 const ProductsOutput = z.object({
+  lang: z.string(),
   products: z.array(
     z.object({
+      id: z.string().optional(),
       name: z.string(),
       url: z.string().optional(),
       codeRepository: z.string().optional(),
@@ -37,7 +40,11 @@ const ProductsOutput = z.object({
 });
 
 const PostsOutput = z.object({
-  posts: z.array(z.object({ id: z.string(), title: z.string(), date: z.string(), lang: z.array(z.string()), url: z.string() })),
+  lang: z.string(),
+  total: z.int(),
+  posts: z.array(
+    z.object({ id: z.string(), title: z.string(), date: z.string(), languages: z.array(z.string()), url: z.string() }),
+  ),
 });
 
 /** A tool result whose text is the JSON of its structured content. */
@@ -70,36 +77,49 @@ function treatMissingArgumentsAsEmpty(server: McpServer): void {
     )) as typeof inner.setRequestHandler;
 }
 
+export interface McpServerOptions {
+  /** The server name reported to clients in `initialize`. Default "agent-ready". */
+  name?: string;
+  /** The server version reported to clients. Default: this package's version. */
+  version?: string;
+}
+
+/** The server's instructions for `owner`: read-only, and nothing but the public profile, products and posts. */
+export const instructionsFor = (ownerName: string): string =>
+  `Read-only. This server only holds ${ownerName}'s public profile, products and posts; any other personal data does not exist here.`;
+
 /** A new server over `data`. Stateless: build one per connection or per HTTP request. */
-export function buildServer(data: SiteData): McpServer {
-  const lang = defaultLang(data);
+export function buildServer(data: SiteData, { name = "agent-ready", version = VERSION }: McpServerOptions = {}): McpServer {
   const { owner, site } = data;
-  const server = new McpServer(
-    { name: "agent-ready", version: VERSION },
-    {
-      instructions: `Read-only. This server only holds ${owner.name}'s public profile, products and posts. Any other personal data does not exist here.`,
-    },
-  );
+  const langs = site.langs as [string, ...string[]];
+  const server = new McpServer({ name, version }, { instructions: instructionsFor(owner.name) });
   treatMissingArgumentsAsEmpty(server);
+
+  /** Every tool takes `lang`, the language of the texts it returns; the site's first language by default. */
+  const lang = z
+    .enum(langs)
+    .default(defaultLang(data))
+    .describe(`Language of the texts: ${langs.map((l) => `"${l}"`).join(" or ")} (default "${defaultLang(data)}").`);
 
   server.registerTool(
     "get_profile",
     {
       title: "Get profile",
-      description: `Return ${owner.name}'s public profile: name, label, about, site URL and public profiles. Read-only; takes no arguments.`,
-      inputSchema: z.strictObject({}),
+      description: `Return ${owner.name}'s public profile: name, label, about, site URL and public profiles. Read-only.`,
+      inputSchema: z.strictObject({ lang }),
       outputSchema: ProfileOutput,
       annotations: READ_ONLY,
     },
-    async () =>
+    async ({ lang: l }) =>
       result(
         compact({
+          lang: l,
           type: owner.type,
           name: owner.name,
           alternateName: owner.alternateName,
           jobTitle: owner.type === "Person" ? owner.jobTitle : undefined,
-          label: owner.label[lang]!,
-          about: owner.about?.[lang] ?? [],
+          label: owner.label[l]!,
+          about: owner.about?.[l] ?? [],
           url: `${site.url}/`,
           profiles: owner.profiles.map((p) => compact({ network: p.network, handle: p.handle, url: p.url })),
         }),
@@ -110,22 +130,24 @@ export function buildServer(data: SiteData): McpServer {
     "list_products",
     {
       title: "List products",
-      description: `List ${owner.name}'s products with their URL, code repository, npm package, license and summary. Read-only; takes no arguments.`,
-      inputSchema: z.strictObject({}),
+      description: `List ${owner.name}'s products with their URL, code repository, npm package, license, programming languages and summary. Read-only.`,
+      inputSchema: z.strictObject({ lang }),
       outputSchema: ProductsOutput,
       annotations: READ_ONLY,
     },
-    async () =>
+    async ({ lang: l }) =>
       result({
+        lang: l,
         products: data.products.map((p) =>
           compact({
+            id: p.id,
             name: p.name,
             url: p.url,
             codeRepository: p.codeRepository,
             npm: p.npm,
             license: p.license,
             programmingLanguage: p.programmingLanguage,
-            summary: p.summary[lang]!,
+            summary: p.summary[l]!,
           }),
         ),
       }),
@@ -135,23 +157,21 @@ export function buildServer(data: SiteData): McpServer {
     "list_posts",
     {
       title: "List posts",
-      description: `List ${owner.name}'s posts, newest first. Optional: limit (1 to 50, default 10) and lang (${site.langs.join(" or ")}) to keep only posts in that language. Read-only.`,
+      description: `List ${owner.name}'s posts, newest first: title, date, languages and link. Read-only.`,
       inputSchema: z.strictObject({
-        limit: z.int().min(1).max(50).default(10).describe("How many posts to return, 1 to 50."),
-        lang: z
-          .enum(site.langs as [string, ...string[]])
-          .optional()
-          .describe("Only posts written in this language; titles in this language."),
+        limit: z.int().min(1).max(50).default(10).describe("How many posts, newest first: 1 to 50 (default 10)."),
+        lang,
       }),
       outputSchema: PostsOutput,
       annotations: READ_ONLY,
     },
-    async ({ limit, lang: only }) =>
+    async ({ limit, lang: l }) =>
       result({
+        lang: l,
+        total: data.posts.length,
         posts: postsNewestFirst(data)
-          .filter((p) => only === undefined || p.lang.includes(only))
           .slice(0, limit)
-          .map((p) => ({ id: p.id, title: postTitle(p, only ?? lang), date: p.date, lang: p.lang, url: p.url })),
+          .map((p) => ({ id: p.id, title: postTitle(p, l), date: p.date, languages: p.lang, url: p.url })),
       }),
   );
 

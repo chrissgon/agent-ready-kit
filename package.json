@@ -1,10 +1,27 @@
 {
   "name": "@chrissgon/agent-ready",
   "version": "0.1.0",
-  "private": true,
   "description": "Make a small site readable by AI agents from one data file: llms.txt, schema.org JSON-LD and a read-only MCP server.",
+  "keywords": [
+    "llms.txt",
+    "json-ld",
+    "schema.org",
+    "mcp",
+    "model-context-protocol",
+    "ai-agents",
+    "seo",
+    "static-site"
+  ],
+  "homepage": "https://github.com/chrissgon/agent-ready-kit#readme",
+  "bugs": {
+    "url": "https://github.com/chrissgon/agent-ready-kit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chrissgon/agent-ready-kit.git"
+  },
   "license": "MIT",
-  "author": "Christopher Gonçalves",
+  "author": "Christopher Gonçalves (https://chrissgon.dev)",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -12,19 +29,43 @@
   "bin": {
     "agent-ready": "dist/cli.js"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./data": {
+      "types": "./dist/data.d.ts",
+      "default": "./dist/data.js"
+    },
+    "./llms": {
+      "types": "./dist/llms.d.ts",
+      "default": "./dist/llms.js"
+    },
+    "./jsonld": {
+      "types": "./dist/jsonld.d.ts",
+      "default": "./dist/jsonld.js"
+    },
+    "./mcp": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:pack": "bash scripts/pack-smoke.sh",
     "prepack": "npm run build"
   },
   "dependencies": {

@@ -24,7 +24,7 @@ describe("generateJsonLd", () => {
     expect(doc["@graph"].map((n) => n["@type"])).toEqual(["Person", "SoftwareSourceCode", "SoftwareSourceCode"]);
     expect(doc["@graph"][0]).toEqual({
       "@type": "Person",
-      "@id": "https://sam.example.com/#owner",
+      "@id": "https://sam.example.com/#person",
       name: "Sam Example",
       alternateName: "samexample",
       jobTitle: "Software Engineer",
@@ -40,7 +40,7 @@ describe("generateJsonLd", () => {
       codeRepository: "https://git.example.org/samexample/tidy-tables",
       programmingLanguage: ["CSS", "TypeScript"],
       license: "https://spdx.org/licenses/MIT.html",
-      author: { "@id": "https://sam.example.com/#owner" },
+      author: { "@id": "https://sam.example.com/#person" },
     });
   });
 
@@ -54,7 +54,15 @@ describe("generateJsonLd", () => {
     const doc = generateJsonLd(org);
     expect(doc["@graph"].map((n) => n["@type"])).toEqual(["Organization", "SoftwareSourceCode"]);
     expect(doc["@graph"][0]).not.toHaveProperty("jobTitle");
-    expect(doc["@graph"][0]!["@id"]).toBe("https://labs.example.org/#owner");
+    expect(doc["@graph"][0]!["@id"]).toBe("https://labs.example.org/#organization");
+  });
+
+  it("builds the license URL with the given function", () => {
+    const doc = generateJsonLd(person, { licenseUrl: (id) => `https://opensource.org/licenses/${id}` });
+    expect(doc["@graph"].slice(1).map((n) => n.license)).toEqual([
+      "https://opensource.org/licenses/MIT",
+      "https://opensource.org/licenses/Apache-2.0",
+    ]);
   });
 
   it("uses the requested language for descriptions", () => {

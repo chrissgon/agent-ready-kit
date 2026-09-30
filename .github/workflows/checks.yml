@@ -1,5 +1,6 @@
 # The project's checks and a secret scan, on every push to main and every pull request.
-# The same checks run in the pre-commit hook (.githooks/pre-commit). Actions are pinned to a commit
+# The same checks run in the pre-commit hook (.githooks/pre-commit), except the packed-tarball smoke test,
+# which installs dependencies from the registry. Actions are pinned to a commit
 # (a tag can be moved); Dependabot proposes updates. Read-only permissions.
 name: checks
 
@@ -50,3 +51,6 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+      # Needs the registry (it installs the tarball's dependencies), so it runs here, not in the pre-commit hook.
+      - name: Packed tarball works from a scratch project
+        run: npm run test:pack

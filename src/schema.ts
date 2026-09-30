@@ -49,6 +49,8 @@ const Organization = z.strictObject({ type: z.literal("Organization"), ...ownerF
 
 const Product = z
   .strictObject({
+    /** Optional stable slug, unique among products; the MCP server returns it so an agent can refer to a product. */
+    id: z.string().regex(SLUG, { error: "must be a lowercase slug such as my-product" }).optional(),
     name: text,
     url: https.optional(),
     codeRepository: https.optional(),
@@ -113,6 +115,17 @@ export const SiteDataSchema = z
     checkLocalized(data.owner.label, ["owner", "label"]);
     checkLocalized(data.owner.about, ["owner", "about"]);
     data.products.forEach((p, i) => checkLocalized(p.summary, ["products", i, "summary"]));
+
+    const productIndex = new Map<string, number>();
+    data.products.forEach((p, i) => {
+      if (p.id === undefined) return;
+      const first = productIndex.get(p.id);
+      if (first !== undefined) {
+        ctx.addIssue({ code: "custom", path: ["products", i, "id"], message: `duplicate id "${p.id}" (first at products.${first})` });
+      } else {
+        productIndex.set(p.id, i);
+      }
+    });
 
     const firstIndex = new Map<string, number>();
     data.posts.forEach((post, i) => {

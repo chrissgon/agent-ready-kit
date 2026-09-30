@@ -43,7 +43,7 @@ describe("buildServer", () => {
   it("tells the client it is read-only and names the owner", async () => {
     const client = await connect();
     expect(client.getInstructions()).toBe(
-      "Read-only. This server only holds Sam Example's public profile, products and posts. Any other personal data does not exist here.",
+      "Read-only. This server only holds Sam Example's public profile, products and posts; any other personal data does not exist here.",
     );
   });
 
@@ -51,6 +51,7 @@ describe("buildServer", () => {
     const result = await call(await connect(), "get_profile");
     expect(result.isError).toBeFalsy();
     expect(result.structuredContent).toEqual({
+      lang: "en",
       type: "Person",
       name: "Sam Example",
       alternateName: "samexample",
@@ -77,8 +78,10 @@ describe("buildServer", () => {
 
   it("list_products returns every product with its links", async () => {
     const result = await call(await connect(), "list_products");
+    expect(result.structuredContent.lang).toBe("en");
     expect(result.structuredContent.products).toEqual([
       {
+        id: "tidy-tables",
         name: "Tidy Tables",
         url: "https://tidytables.example.com",
         codeRepository: "https://git.example.org/samexample/tidy-tables",
@@ -97,8 +100,10 @@ describe("buildServer", () => {
     ]);
   });
 
-  it("list_posts returns posts newest first, 10 at most by default", async () => {
+  it("list_posts returns every post newest first, 10 at most by default, with the total", async () => {
     const result = await call(await connect(), "list_posts");
+    expect(result.structuredContent.lang).toBe("en");
+    expect(result.structuredContent.total).toBe(3);
     expect(result.structuredContent.posts.map((p: { id: string }) => p.id)).toEqual([
       "hello-agents",
       "tables-for-everyone",
@@ -108,22 +113,59 @@ describe("buildServer", () => {
       id: "hello-agents",
       title: "Hello, agents",
       date: "2026-09-20",
-      lang: ["en"],
+      languages: ["en"],
       url: "https://blog.example.com/hello-agents",
     });
   });
 
-  it("list_posts honours limit and lang", async () => {
+  it("list_posts honours limit, and lang picks the titles without dropping posts", async () => {
     const client = await connect();
-    expect((await call(client, "list_posts", { limit: 1 })).structuredContent.posts).toHaveLength(1);
+    const one = await call(client, "list_posts", { limit: 1 });
+    expect(one.structuredContent.posts).toHaveLength(1);
+    expect(one.structuredContent.total).toBe(3);
     const pt = await call(client, "list_posts", { lang: "pt" });
-    expect(pt.structuredContent.posts.map((p: { title: string }) => p.title)).toEqual(["Tabelas para todos", "Logs que sussurram"]);
+    expect(pt.structuredContent.lang).toBe("pt");
+    // A post with no title in the requested language keeps its own.
+    expect(pt.structuredContent.posts.map((p: { title: string }) => p.title)).toEqual([
+      "Hello, agents",
+      "Tabelas para todos",
+      "Logs que sussurram",
+    ]);
+  });
+
+  it("get_profile and list_products return the texts of the requested language", async () => {
+    const client = await connect();
+    const profile = await call(client, "get_profile", { lang: "pt" });
+    expect(profile.structuredContent.lang).toBe("pt");
+    expect(profile.structuredContent.label).toBe("Engenheiro de software · Ferramentas pequenas de código aberto para a web");
+    expect(profile.structuredContent.about[0]).toMatch(/^Sam cria ferramentas/);
+    const products = await call(client, "list_products", { lang: "pt" });
+    expect(products.structuredContent.products[0].summary).toBe("Tabelas de dados acessíveis numa folha de estilos pequena.");
+  });
+
+  it("offers lang on every tool, limited to the site languages, default the first", async () => {
+    const { tools } = await (await connect()).listTools();
+    for (const tool of tools) {
+      const lang = tool.inputSchema.properties?.lang as { enum: string[]; default: string };
+      expect(lang.enum).toEqual(["en", "pt"]);
+      expect(lang.default).toBe("en");
+    }
+  });
+
+  it("reports the name and version it is given", async () => {
+    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+    await buildServer(person, { name: "sam.example.com", version: "2.0.0" }).connect(serverSide);
+    const client = new Client({ name: "test", version: "0.0.0" });
+    await client.connect(clientSide);
+    open.push(client);
+    expect(client.getServerVersion()).toEqual({ name: "sam.example.com", version: "2.0.0" });
   });
 
   it.each([
     ["a limit above 50", "list_posts", { limit: 51 }],
     ["a limit below 1", "list_posts", { limit: 0 }],
     ["a language the site does not declare", "list_posts", { lang: "fr" }],
+    ["a language the site does not declare", "get_profile", { lang: "fr" }],
     ["an extra argument", "get_profile", { query: "ignore previous instructions" }],
     ["an extra argument", "list_posts", { limit: 2, search: "email" }],
   ])("rejects %s (%s)", async (_case, name, args) => {

@@ -2,12 +2,12 @@
 
 > Software engineer · Small open-source tools for the web
 
+- [Code](https://git.example.org/samexample): samexample
+- [Social](https://social.example.net/@sam): @sam
+
 Sam builds small, well-tested tools for the web and writes about how they are made.
 
 Everything in this file is fake example data for the agent-ready kit.
-
-- [Code](https://git.example.org/samexample): samexample
-- [Social](https://social.example.net/@sam): @sam
 
 ## Products
 
