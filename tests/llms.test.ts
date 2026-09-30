@@ -2,7 +2,8 @@
 // and matches the reviewed reference file.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { generateLlms, llmsPath } from "../src/llms.js";
+import { generateLlms, generateLlmsParts, LLMS_PARTS, llmsPath } from "../src/llms.js";
+import { TOOL_NAMES } from "../src/mcp.js";
 import { parseData } from "../src/load.js";
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
@@ -62,6 +63,66 @@ describe("generateLlms", () => {
 
   it("refuses a language the site does not declare", () => {
     expect(() => generateLlms(org, { lang: "pt" })).toThrow('llms: "pt" is not a site language (en)');
+  });
+});
+
+describe("generateLlmsParts", () => {
+  it("returns the parts in order, and joined with a blank line they are generateLlms", () => {
+    for (const [data, lang] of [[person, "en"], [person, "pt"], [org, "en"]] as const) {
+      const parts = generateLlmsParts(data, { lang });
+      expect(Object.keys(parts)).toEqual([...LLMS_PARTS]);
+      const joined = LLMS_PARTS.map((p) => parts[p]).filter(Boolean).join("\n");
+      expect(joined).toBe(generateLlms(data, { lang }));
+      for (const part of Object.values(parts)) if (part) expect(part).toMatch(/[^\n]\n$/);
+    }
+  });
+
+  it("leaves a part empty when the data has nothing for it", () => {
+    const parts = generateLlmsParts(org);
+    expect(parts.about).toBe("");
+    expect(parts.writing).toBe("");
+    expect(parts.agents).toBe("");
+    expect(parts.head).toBe("# Example Labs\n\n> A small studio that maintains open-source developer tools\n\n- [Code](https://git.example.org/exlabs)\n");
+  });
+
+  it("names the tools the MCP server registers", () => {
+    expect(generateLlmsParts(person).agents).toContain(`tools ${TOOL_NAMES.join(", ")}`);
+  });
+});
+
+describe("labels", () => {
+  const pt = {
+    about: "Sobre",
+    products: "Produtos",
+    writing: "Escrita",
+    forAgents: "Para agentes",
+    code: "Código",
+    license: "Licença",
+    programmingLanguages: "Linguagens",
+    languages: "idiomas",
+    mcpServer: "Servidor MCP",
+    mcpNotes: "só leitura, Streamable HTTP (POST); ferramentas",
+    thisFileIn: "este arquivo em",
+  };
+
+  it("replace every heading and word, and an about label puts the paragraphs under an H2", () => {
+    const out = generateLlms(person, { lang: "pt", labels: pt });
+    expect(out.split("\n").filter((l) => l.startsWith("## "))).toEqual(["## Sobre", "## Produtos", "## Escrita", "## Para agentes"]);
+    expect(out).toContain("## Sobre\n\nSam cria ferramentas");
+    expect(out).toContain(
+      "Código: https://git.example.org/samexample/tidy-tables. npm: @samexample/tidy-tables. Licença: MIT. Linguagens: CSS, TypeScript.",
+    );
+    expect(out).toContain("- [Tabelas para todos](https://blog.example.com/tables-for-everyone): 2026-08-14; idiomas: en, pt");
+    expect(out).toContain("- [Servidor MCP](https://sam.example.com/api/mcp): só leitura, Streamable HTTP (POST); ferramentas get_profile");
+    expect(out).toContain("- [llms.txt (en)](https://sam.example.com/llms.txt): este arquivo em en");
+    for (const word of ["Products", "Writing", "For agents", "License:", "languages:", "this file in"]) expect(out).not.toContain(word);
+  });
+
+  it("keep the English default for a label that is not given", () => {
+    const out = generateLlms(person, { labels: { products: "Tools" } });
+    expect(out).toContain("## Tools\n");
+    expect(out).toContain("## Writing\n");
+    expect(out).not.toContain("## About");
   });
 });
 

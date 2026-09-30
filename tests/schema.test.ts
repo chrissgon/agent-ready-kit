@@ -119,6 +119,16 @@ describe("rules", () => {
     expect(issuesOf(value)).toEqual(["data: products.0: needs a url or a codeRepository"]);
   });
 
+  it("takes an optional product id: a slug, unique among products", () => {
+    const value = raw("person.json");
+    value.products[1].id = "tidy-tables";
+    expect(issuesOf(value)).toEqual(['data: products.1.id: duplicate id "tidy-tables" (first at products.0)']);
+    value.products[1].id = "Quiet Logs";
+    expect(issuesOf(value)).toEqual(["data: products.1.id: must be a lowercase slug such as my-product"]);
+    delete value.products[1].id;
+    expect(() => validate(value)).not.toThrow();
+  });
+
   it("rejects a jobTitle on an Organization", () => {
     const value = raw("org.json");
     value.owner.jobTitle = "Studio";

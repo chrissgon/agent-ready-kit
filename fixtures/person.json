@@ -30,6 +30,7 @@
   },
   "products": [
     {
+      "id": "tidy-tables",
       "name": "Tidy Tables",
       "url": "https://tidytables.example.com",
       "codeRepository": "https://git.example.org/samexample/tidy-tables",
