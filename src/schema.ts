@@ -4,6 +4,16 @@ import { z } from "zod";
 
 /** Fields the kit never publishes, wherever they appear in the data file. */
 export const FORBIDDEN_FIELDS = ["worksFor", "address", "homeLocation", "birthDate", "email"] as const;
+const FORBIDDEN = new Set<string>(FORBIDDEN_FIELDS);
+
+/** Paths of every forbidden key anywhere in a value, e.g. [["owner", "email"]]. */
+export function forbiddenPaths(value: unknown, path: PropertyKey[] = []): PropertyKey[][] {
+  if (Array.isArray(value)) return value.flatMap((v, i) => forbiddenPaths(v, [...path, i]));
+  if (value === null || typeof value !== "object") return [];
+  return Object.entries(value).flatMap(([key, v]) =>
+    FORBIDDEN.has(key) ? [[...path, key]] : forbiddenPaths(v, [...path, key]),
+  );
+}
 
 const LANG = /^[a-z]{2,3}(-[A-Z]{2})?$/;
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;

@@ -1,7 +1,7 @@
 // Read and validate a data file. Every problem becomes one line `data: <field path>: <message>`.
 import { readFile } from "node:fs/promises";
 import type { z } from "zod";
-import { FORBIDDEN_FIELDS, SiteDataSchema, type SiteData } from "./schema.js";
+import { FORBIDDEN_FIELDS, forbiddenPaths, SiteDataSchema, type SiteData } from "./schema.js";
 
 /** The data file is not valid. `issues` holds one `data: <field path>: <message>` line per problem. */
 export class DataError extends Error {
@@ -18,15 +18,6 @@ type Path = readonly PropertyKey[];
 
 const line = (path: Path, message: string) =>
   `data: ${path.length ? path.map(String).join(".") : "(root)"}: ${message}`;
-
-/** Paths of every forbidden key anywhere in a raw value. */
-function forbiddenPaths(value: unknown, path: PropertyKey[] = []): PropertyKey[][] {
-  if (Array.isArray(value)) return value.flatMap((v, i) => forbiddenPaths(v, [...path, i]));
-  if (value === null || typeof value !== "object") return [];
-  return Object.entries(value).flatMap(([key, v]) =>
-    FORBIDDEN.has(key) ? [[...path, key]] : forbiddenPaths(v, [...path, key]),
-  );
-}
 
 function zodLines(issues: z.core.$ZodIssue[]): string[] {
   return issues.flatMap((issue) => {
