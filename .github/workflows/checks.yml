@@ -1,5 +1,5 @@
 # The project's checks and a secret scan, on every push to main and every pull request.
-# The same checks run in the pre-commit hook (.githooks/pre-commit), except the packed-tarball smoke test,
+# The same checks run in the pre-commit hook (.husky/pre-commit), except the packed-tarball smoke test,
 # which installs dependencies from the registry. Actions are pinned to a commit
 # (a tag can be moved); Dependabot proposes updates. Read-only permissions.
 name: checks
